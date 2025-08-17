@@ -52,6 +52,16 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				divine: {
+					gold: 'hsl(var(--divine-gold))',
+					'gold-light': 'hsl(var(--divine-gold-light))',
+					'gold-dark': 'hsl(var(--divine-gold-dark))',
+					saffron: 'hsl(var(--divine-saffron))',
+					'saffron-light': 'hsl(var(--divine-saffron-light))',
+					cream: 'hsl(var(--divine-cream))',
+					brown: 'hsl(var(--divine-brown))',
+					'brown-light': 'hsl(var(--divine-brown-light))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -88,7 +98,19 @@ export default {
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'float': 'float 3s ease-in-out infinite',
+				'glow': 'glow 2s ease-in-out infinite alternate'
+			},
+			backgroundImage: {
+				'gradient-divine': 'var(--gradient-divine)',
+				'gradient-sunset': 'var(--gradient-sunset)',
+				'gradient-temple': 'var(--gradient-temple)'
+			},
+			boxShadow: {
+				'divine': 'var(--shadow-divine)',
+				'glow': 'var(--shadow-glow)',
+				'elevated': 'var(--shadow-elevated)'
 			}
 		}
 	},

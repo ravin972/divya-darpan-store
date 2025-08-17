@@ -8,33 +8,53 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 35 20% 98%;
+    --foreground: 25 25% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 25 25% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 25 25% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 25 85% 45%;
+    --primary-foreground: 35 20% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 35 30% 90%;
+    --secondary-foreground: 25 25% 15%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 35 15% 94%;
+    --muted-foreground: 25 15% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 45 95% 55%;
+    --accent-foreground: 25 25% 15%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 35 20% 88%;
+    --input: 35 20% 90%;
+    --ring: 25 85% 45%;
+
+    /* Divine theme colors */
+    --divine-gold: 45 95% 55%;
+    --divine-gold-light: 45 85% 65%;
+    --divine-gold-dark: 45 85% 35%;
+    --divine-saffron: 25 85% 45%;
+    --divine-saffron-light: 25 75% 55%;
+    --divine-cream: 35 20% 98%;
+    --divine-brown: 25 25% 15%;
+    --divine-brown-light: 25 15% 25%;
+
+    /* Gradients */
+    --gradient-divine: linear-gradient(135deg, hsl(var(--divine-saffron)), hsl(var(--divine-gold)));
+    --gradient-sunset: linear-gradient(180deg, hsl(var(--divine-cream)), hsl(var(--divine-gold-light)));
+    --gradient-temple: linear-gradient(145deg, hsl(var(--divine-saffron-light)), hsl(var(--divine-saffron)));
+
+    /* Shadows */
+    --shadow-divine: 0 10px 30px -10px hsl(var(--divine-saffron) / 0.3);
+    --shadow-glow: 0 0 40px hsl(var(--divine-gold) / 0.2);
+    --shadow-elevated: 0 20px 60px -15px hsl(var(--divine-brown) / 0.15);
 
     --radius: 0.5rem;
 
@@ -101,5 +121,30 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes glow {
+    from { box-shadow: 0 0 20px hsl(var(--divine-gold) / 0.3); }
+    to { box-shadow: 0 0 30px hsl(var(--divine-gold) / 0.6); }
+  }
+}
+
+@layer components {
+  .btn-divine {
+    @apply bg-gradient-divine text-primary-foreground px-6 py-3 rounded-lg font-semibold shadow-divine hover:shadow-glow transition-all duration-300 hover:scale-105;
+  }
+
+  .card-divine {
+    @apply bg-card border border-border rounded-xl p-6 shadow-elevated hover:shadow-divine transition-all duration-300;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-divine bg-clip-text text-transparent;
   }
 }

@@ -95,7 +95,7 @@ export default function Admin() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch users with their roles
+      // Fetch users
       const { data: usersData, error: usersError } = await supabase
         .from('profiles')
         .select('*')
@@ -103,7 +103,20 @@ export default function Admin() {
 
       if (usersError) throw usersError;
 
-      // Fetch orders with user profiles
+      // Fetch user roles separately
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (rolesError) throw rolesError;
+
+      // Combine users with their roles
+      const usersWithRoles = (usersData || []).map(user => ({
+        ...user,
+        user_roles: (rolesData || []).filter(role => role.user_id === user.user_id).map(role => ({ role: role.role }))
+      }));
+
+      // Fetch orders
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('*')
@@ -111,8 +124,14 @@ export default function Admin() {
 
       if (ordersError) throw ordersError;
 
-      setUsers(usersData || []);
-      setOrders(ordersData || []);
+      // Combine orders with user profiles
+      const ordersWithProfiles = (ordersData || []).map(order => ({
+        ...order,
+        profiles: usersWithRoles.find(user => user.user_id === order.user_id) || { first_name: 'Unknown', last_name: 'User' }
+      }));
+
+      setUsers(usersWithRoles);
+      setOrders(ordersWithProfiles);
     } catch (error: any) {
       toast({
         title: "Error",

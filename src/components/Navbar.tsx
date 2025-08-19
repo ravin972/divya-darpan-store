@@ -18,7 +18,7 @@ const Navbar = () => {
     { name: 'Products', href: '/products' },
     { name: 'Parivartan', href: '/brands/parivartan' },
     { name: 'Anandam', href: '/brands/anandam' },
-    { name: 'Priest Booking', href: '/priest-booking' },
+    { name: 'Pandit Services', href: '/pandit-services' },
   ];
 
   return (

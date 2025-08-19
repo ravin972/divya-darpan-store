@@ -11,6 +11,7 @@ import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import PriestBooking from "./pages/PriestBooking";
+import PanditServices from "./pages/PanditServices";
 import Auth from "./pages/Auth";
 import Parivartan from "./pages/Parivartan";
 import Anandam from "./pages/Anandam";
@@ -18,6 +19,7 @@ import Checkout from "./pages/Checkout";
 import CashOnDelivery from "./pages/CashOnDelivery";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import Footer from "./components/Footer";
 
 const queryClient = new QueryClient();
 
@@ -35,15 +37,17 @@ const App = () => (
               <Route path="/products" element={<Products />} />
               <Route path="/products/:id" element={<ProductDetail />} />
               <Route path="/cart" element={<Cart />} />
+              <Route path="/brands/parivartan" element={<Parivartan />} />
+              <Route path="/brands/anandam" element={<Anandam />} />
+              <Route path="/pandit-services" element={<PanditServices />} />
               <Route path="/priest-booking" element={<PriestBooking />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/parivartan" element={<Parivartan />} />
-              <Route path="/anandam" element={<Anandam />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/cash-on-delivery" element={<CashOnDelivery />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <Footer />
           </BrowserRouter>
         </CartProvider>
       </AuthProvider>

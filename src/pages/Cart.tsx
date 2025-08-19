@@ -166,10 +166,12 @@ const Cart = () => {
                   <span>₹{finalTotal.toLocaleString()}</span>
                 </div>
 
-                <Button className="w-full btn-divine">
-                  Proceed to Checkout
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                <Link to="/checkout">
+                  <Button className="w-full btn-divine">
+                    Proceed to Checkout
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
@@ -197,6 +199,47 @@ const Cart = () => {
                 <p className="text-xs text-muted-foreground mt-2">
                   Try: DIVINE10 for 10% off
                 </p>
+              </CardContent>
+            </Card>
+
+            {/* Add-on Services */}
+            <Card className="card-divine">
+              <CardHeader>
+                <CardTitle className="text-lg">Add-on Services</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <div className="flex-1">
+                    <h4 className="font-medium">Express Delivery</h4>
+                    <p className="text-sm text-muted-foreground">Get your order in 1-2 days</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">₹200</p>
+                    <Button variant="outline" size="sm">Add</Button>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <div className="flex-1">
+                    <h4 className="font-medium">Gift Wrapping</h4>
+                    <p className="text-sm text-muted-foreground">Beautiful divine-themed packaging</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">₹150</p>
+                    <Button variant="outline" size="sm">Add</Button>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <div className="flex-1">
+                    <h4 className="font-medium">Blessing Ceremony</h4>
+                    <p className="text-sm text-muted-foreground">Priest blessing before delivery</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">₹500</p>
+                    <Button variant="outline" size="sm">Add</Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 

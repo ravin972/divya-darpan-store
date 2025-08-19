@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,10 +36,29 @@ interface Order {
   };
 }
 
+interface Pandit {
+  id: string;
+  user_id: string;
+  name: string;
+  email: string;
+  phone: string;
+  experience_years: number;
+  specialization: string;
+  languages: string[];
+  education?: string;
+  certifications?: string;
+  bio?: string;
+  price_per_hour: number;
+  location: string;
+  verification_status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+}
+
 export default function Admin() {
   const [isLoading, setIsLoading] = useState(true);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [pandits, setPandits] = useState<Pandit[]>([]);
   const [selectedUser, setSelectedUser] = useState<string>('');
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -130,8 +149,20 @@ export default function Admin() {
         profiles: usersWithRoles.find(user => user.user_id === order.user_id) || { first_name: 'Unknown', last_name: 'User' }
       }));
 
+      // Fetch pandits
+      const { data: panditsData, error: panditsError } = await supabase
+        .from('pandits')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (panditsError) throw panditsError;
+
       setUsers(usersWithRoles);
       setOrders(ordersWithProfiles);
+      setPandits((panditsData || []).map(p => ({
+        ...p,
+        verification_status: p.verification_status as 'pending' | 'approved' | 'rejected'
+      })));
     } catch (error: any) {
       toast({
         title: "Error",
@@ -204,6 +235,34 @@ export default function Admin() {
     }
   };
 
+  const updatePanditStatus = async (panditId: string, status: 'approved' | 'rejected') => {
+    try {
+      const { error } = await supabase
+        .from('pandits')
+        .update({ 
+          verification_status: status,
+          verified_by: user?.id,
+          verified_at: new Date().toISOString()
+        })
+        .eq('id', panditId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Status Updated",
+        description: `Pandit has been ${status}.`,
+      });
+
+      fetchData(); // Refresh data
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -226,9 +285,10 @@ export default function Admin() {
           </div>
 
           <Tabs defaultValue="users" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="users">User Management</TabsTrigger>
               <TabsTrigger value="orders">Order Management</TabsTrigger>
+              <TabsTrigger value="pandits">Pandit Applications</TabsTrigger>
               <TabsTrigger value="roles">Role Assignment</TabsTrigger>
             </TabsList>
 
@@ -417,7 +477,95 @@ export default function Admin() {
                 </CardContent>
               </Card>
             </TabsContent>
-          </Tabs>
+          {/* Pandit Applications Tab */}
+          <TabsContent value="pandits" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Pandit Applications</CardTitle>
+                <CardDescription>
+                  Review and approve pandit registrations
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="animate-pulse bg-muted h-20 rounded"></div>
+                    ))}
+                  </div>
+                ) : pandits.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No pandit applications found.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {pandits.map((pandit) => (
+                      <Card key={pandit.id} className="p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-3">
+                              <h3 className="font-semibold">{pandit.name}</h3>
+                              <Badge 
+                                variant={
+                                  pandit.verification_status === 'approved' ? 'default' :
+                                  pandit.verification_status === 'rejected' ? 'destructive' : 'secondary'
+                                }
+                              >
+                                {pandit.verification_status}
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
+                              <p><strong>Email:</strong> {pandit.email}</p>
+                              <p><strong>Phone:</strong> {pandit.phone}</p>
+                              <p><strong>Experience:</strong> {pandit.experience_years} years</p>
+                              <p><strong>Specialization:</strong> {pandit.specialization}</p>
+                              <p><strong>Location:</strong> {pandit.location}</p>
+                              <p><strong>Price:</strong> ₹{pandit.price_per_hour}/hour</p>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-sm"><strong>Languages:</strong> {pandit.languages.join(', ')}</p>
+                              {pandit.education && (
+                                <p className="text-sm"><strong>Education:</strong> {pandit.education}</p>
+                              )}
+                              {pandit.certifications && (
+                                <p className="text-sm"><strong>Certifications:</strong> {pandit.certifications}</p>
+                              )}
+                              {pandit.bio && (
+                                <p className="text-sm"><strong>Bio:</strong> {pandit.bio}</p>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Applied: {new Date(pandit.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          
+                          {pandit.verification_status === 'pending' && (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => updatePanditStatus(pandit.id, 'approved')}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => updatePanditStatus(pandit.id, 'rejected')}
+                              >
+                                Reject
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
         </div>
       </div>
     </div>

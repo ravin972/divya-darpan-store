@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      cart_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          quantity: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          quantity?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           created_at: string
@@ -56,6 +91,194 @@ export type Database = {
           total?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      pandit_bookings: {
+        Row: {
+          booking_date: string
+          booking_time: string
+          contact_email: string
+          contact_phone: string
+          created_at: string
+          duration_hours: number
+          id: string
+          location: string
+          notes: string | null
+          pandit_id: string
+          service_type: string
+          special_requirements: string | null
+          status: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_date: string
+          booking_time: string
+          contact_email: string
+          contact_phone: string
+          created_at?: string
+          duration_hours?: number
+          id?: string
+          location: string
+          notes?: string | null
+          pandit_id: string
+          service_type: string
+          special_requirements?: string | null
+          status?: string
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_date?: string
+          booking_time?: string
+          contact_email?: string
+          contact_phone?: string
+          created_at?: string
+          duration_hours?: number
+          id?: string
+          location?: string
+          notes?: string | null
+          pandit_id?: string
+          service_type?: string
+          special_requirements?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pandit_bookings_pandit_id_fkey"
+            columns: ["pandit_id"]
+            isOneToOne: false
+            referencedRelation: "pandits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pandits: {
+        Row: {
+          bio: string | null
+          certifications: string | null
+          created_at: string
+          education: string | null
+          email: string
+          experience_years: number
+          id: string
+          languages: string[]
+          location: string | null
+          name: string
+          phone: string
+          price_per_hour: number
+          profile_image: string | null
+          specialization: string
+          updated_at: string
+          user_id: string | null
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          bio?: string | null
+          certifications?: string | null
+          created_at?: string
+          education?: string | null
+          email: string
+          experience_years: number
+          id?: string
+          languages?: string[]
+          location?: string | null
+          name: string
+          phone: string
+          price_per_hour: number
+          profile_image?: string | null
+          specialization: string
+          updated_at?: string
+          user_id?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          bio?: string | null
+          certifications?: string | null
+          created_at?: string
+          education?: string | null
+          email?: string
+          experience_years?: number
+          id?: string
+          languages?: string[]
+          location?: string | null
+          name?: string
+          phone?: string
+          price_per_hour?: number
+          profile_image?: string | null
+          specialization?: string
+          updated_at?: string
+          user_id?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          brand: string
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          images: string[] | null
+          is_active: boolean | null
+          is_featured: boolean | null
+          name: string
+          original_price: number | null
+          price: number
+          rating: number | null
+          reviews_count: number | null
+          stock: number
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          brand: string
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          name: string
+          original_price?: number | null
+          price: number
+          rating?: number | null
+          reviews_count?: number | null
+          stock?: number
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          brand?: string
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          name?: string
+          original_price?: number | null
+          price?: number
+          rating?: number | null
+          reviews_count?: number | null
+          stock?: number
+          tags?: string[] | null
+          updated_at?: string
         }
         Relationships: []
       }

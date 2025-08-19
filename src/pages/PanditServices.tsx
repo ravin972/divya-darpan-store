@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,10 +13,76 @@ import {
   Heart,
   Flame,
   Sparkles,
-  Bell
+  Bell,
+  UserPlus
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import PanditRegistrationForm from '@/components/PanditRegistrationForm';
+import { toast } from '@/hooks/use-toast';
+
+interface Pandit {
+  id: string;
+  name: string;
+  experience_years: number;
+  specialization: string;
+  languages: string[];
+  price_per_hour: number;
+  location: string;
+  bio?: string;
+  verification_status: string;
+}
 
 export default function PanditServices() {
+  const { user } = useAuth();
+  const [pandits, setPandits] = useState<Pandit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showRegistration, setShowRegistration] = useState(false);
+
+  useEffect(() => {
+    fetchApprovedPandits();
+  }, []);
+
+  const fetchApprovedPandits = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pandits')
+        .select('*')
+        .eq('verification_status', 'approved')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPandits(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to load pandits. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegistrationSuccess = () => {
+    setShowRegistration(false);
+    toast({
+      title: "Application Submitted",
+      description: "Your pandit registration has been submitted for admin review.",
+    });
+  };
+
+  if (showRegistration) {
+    return (
+      <div className="min-h-screen bg-background py-8 px-4">
+        <PanditRegistrationForm 
+          onSuccess={handleRegistrationSuccess}
+          onCancel={() => setShowRegistration(false)}
+        />
+      </div>
+    );
+  }
+
   const services = [
     {
       id: 1,
@@ -55,39 +122,6 @@ export default function PanditServices() {
     }
   ];
 
-  const featuredPandits = [
-    {
-      name: "Pandit Rajesh Sharma",
-      experience: "15+ years",
-      specialization: "Wedding Ceremonies",
-      languages: ["Hindi", "Sanskrit", "English"],
-      rating: 4.9,
-      reviews: 150,
-      price: "₹2,000/hour",
-      image: "/placeholder-pandit.jpg"
-    },
-    {
-      name: "Pandit Mohan Tripathi",
-      experience: "20+ years",
-      specialization: "Griha Pravesh & Vastu",
-      languages: ["Hindi", "Sanskrit", "Gujarati"],
-      rating: 4.8,
-      reviews: 120,
-      price: "₹1,800/hour",
-      image: "/placeholder-pandit.jpg"
-    },
-    {
-      name: "Pandit Suresh Pandey",
-      experience: "12+ years",
-      specialization: "Havan & Fire Ceremonies",
-      languages: ["Hindi", "Sanskrit", "Marathi"],
-      rating: 4.9,
-      reviews: 95,
-      price: "₹1,500/hour",
-      image: "/placeholder-pandit.jpg"
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -105,6 +139,14 @@ export default function PanditServices() {
               <Link to="/priest-booking">
                 Book a Pandit Now <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowRegistration(true)}
+              className="flex items-center gap-2"
+            >
+              <UserPlus className="h-4 w-4" />
+              Become a Pandit
             </Button>
             <Button variant="outline" asChild>
               <Link to="#services">Browse Services</Link>
@@ -163,57 +205,96 @@ export default function PanditServices() {
         </div>
       </section>
 
-      {/* Featured Pandits */}
+      {/* Our Pandits */}
       <section className="py-16 px-4 bg-gradient-sunset">
         <div className="container mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12 text-gradient">
-            Featured Pandits
+            Our Verified Pandits
           </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {featuredPandits.map((pandit, index) => (
-              <Card key={index} className="card-divine text-center hover:shadow-glow transition-all duration-300">
-                <CardContent className="pt-8">
-                  <div className="w-24 h-24 bg-muted rounded-full mx-auto mb-4 overflow-hidden">
-                    <div className="w-full h-full bg-gradient-divine flex items-center justify-center">
-                      <span className="text-primary-foreground text-2xl font-bold">
-                        {pandit.name.split(' ')[1].charAt(0)}
-                      </span>
+          
+          {loading ? (
+            <div className="grid md:grid-cols-3 gap-8">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="card-divine animate-pulse">
+                  <CardContent className="pt-8">
+                    <div className="w-24 h-24 bg-muted rounded-full mx-auto mb-4"></div>
+                    <div className="h-4 bg-muted rounded w-3/4 mx-auto mb-2"></div>
+                    <div className="h-3 bg-muted rounded w-1/2 mx-auto mb-4"></div>
+                    <div className="space-y-2">
+                      <div className="h-3 bg-muted rounded w-full"></div>
+                      <div className="h-3 bg-muted rounded w-full"></div>
                     </div>
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">{pandit.name}</h3>
-                  <Badge className="mb-3 bg-divine-saffron text-primary-foreground">
-                    {pandit.specialization}
-                  </Badge>
-                  
-                  <div className="space-y-2 text-sm text-muted-foreground mb-4">
-                    <div className="flex items-center justify-center">
-                      <Users className="h-4 w-4 mr-1" />
-                      {pandit.experience}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : pandits.length > 0 ? (
+            <div className="grid md:grid-cols-3 gap-8">
+              {pandits.map((pandit) => (
+                <Card key={pandit.id} className="card-divine text-center hover:shadow-glow transition-all duration-300">
+                  <CardContent className="pt-8">
+                    <div className="w-24 h-24 bg-muted rounded-full mx-auto mb-4 overflow-hidden">
+                      <div className="w-full h-full bg-gradient-divine flex items-center justify-center">
+                        <span className="text-primary-foreground text-2xl font-bold">
+                          {pandit.name.split(' ')[0].charAt(0)}{pandit.name.split(' ')[1]?.charAt(0) || ''}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-center">
-                      <Star className="h-4 w-4 mr-1 fill-divine-gold text-divine-gold" />
-                      {pandit.rating} ({pandit.reviews} reviews)
+                    <h3 className="text-xl font-semibold mb-2">{pandit.name}</h3>
+                    <Badge className="mb-3 bg-divine-saffron text-primary-foreground">
+                      {pandit.specialization}
+                    </Badge>
+                    
+                    <div className="space-y-2 text-sm text-muted-foreground mb-4">
+                      <div className="flex items-center justify-center">
+                        <Users className="h-4 w-4 mr-1" />
+                        {pandit.experience_years}+ years
+                      </div>
+                      <div className="flex items-center justify-center">
+                        <MapPin className="h-4 w-4 mr-1" />
+                        {pandit.location}
+                      </div>
+                      <div className="flex flex-wrap gap-1 justify-center">
+                        {pandit.languages.slice(0, 3).map((lang, langIndex) => (
+                          <Badge key={langIndex} variant="secondary" className="text-xs">
+                            {lang}
+                          </Badge>
+                        ))}
+                        {pandit.languages.length > 3 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{pandit.languages.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-1 justify-center">
-                      {pandit.languages.map((lang, langIndex) => (
-                        <Badge key={langIndex} variant="secondary" className="text-xs">
-                          {lang}
-                        </Badge>
-                      ))}
+                    
+                    <div className="text-lg font-semibold text-divine-saffron mb-4">
+                      ₹{pandit.price_per_hour}/hour
                     </div>
-                  </div>
-                  
-                  <div className="text-lg font-semibold text-divine-saffron mb-4">
-                    {pandit.price}
-                  </div>
-                  
-                  <Button variant="outline" className="w-full">
-                    Book Consultation
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    
+                    <Button variant="outline" className="w-full">
+                      Book Consultation
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">No Verified Pandits Yet</h3>
+              <p className="text-muted-foreground mb-6">
+                Be the first to join our platform as a verified pandit!
+              </p>
+              <Button 
+                onClick={() => setShowRegistration(true)}
+                className="btn-divine"
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Become a Pandit
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 

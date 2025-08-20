@@ -22,3 +22,40 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables - NEVER commit secrets
+.env
+.env.*
+!.env.example
+
+# Server environment variables
+server/.env
+server/.env.*
+!server/.env.example
+
+# Dotenv local overrides
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+server/.env.local
+server/.env.development.local
+server/.env.test.local
+server/.env.production.local
+
+# Credentials and keys
+*.pem
+*.pfx
+*.p12
+*.key
+id_rsa
+id_dsa
+*.enc
+
+# Supabase local artifacts (if any)
+supabase/.temp/
+
+# Build caches
+.cache
+.turbo
+.parcel-cache

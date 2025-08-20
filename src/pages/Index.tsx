@@ -6,8 +6,19 @@ import { Badge } from '@/components/ui/badge';
 import heroImage from '@/assets/hero-temple.jpg';
 import ProductCard from '@/components/ProductCard';
 import { products } from '@/data/products';
+import { useEffect, useState } from "react";
 
 const Index = () => {
+
+  // 👇 backend health check
+  const [message, setMessage] = useState("");
+  useEffect(() => {
+    fetch("/api/health")
+    .then((res) => res.json())
+    .then((data) => console.log("✅ Backend Response:", data))
+    .catch((err) => console.error("❌ Error:", err));
+  }, []);
+
   const featuredProducts = products.slice(0, 4);
   const stats = [
     { label: 'Happy Customers', value: '10,000+', icon: Users },

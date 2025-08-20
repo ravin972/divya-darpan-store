@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Heart, Share2, Star, ShoppingCart, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,18 +6,66 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCart } from '@/contexts/CartContext';
-import { products } from '@/data/products';
 import ProductCard from '@/components/ProductCard';
+
+interface ApiProduct {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  category: string;
+  brand: 'Parivartan' | 'Anandam' | 'Priest Booking' | string;
+  stock: number;
+  description?: string;
+}
 
 const ProductDetail = () => {
   const { id } = useParams();
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [product, setProduct] = useState<ApiProduct | null>(null);
+  const [related, setRelated] = useState<ApiProduct[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const product = products.find(p => p.id === id);
+  useEffect(() => {
+    const load = async () => {
+      if (!id) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/products/${id}`);
+        if (!res.ok) throw new Error('Product not found');
+        const item = await res.json();
+        setProduct(item);
+        // fetch related by category
+        const relRes = await fetch(`/api/products?category=${encodeURIComponent(item.category)}`);
+        if (relRes.ok) {
+          const data = await relRes.json();
+          const filtered = (data.items || []).filter((p: ApiProduct) => p.id !== item.id).slice(0, 4);
+          setRelated(filtered);
+        }
+      } catch (e: any) {
+        setError(e.message || 'Failed to load product');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [id]);
   
-  if (!product) {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Loading...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -30,11 +78,12 @@ const ProductDetail = () => {
     );
   }
 
-  const relatedProducts = products
-    .filter(p => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
+  const relatedProducts = related;
 
   const handleAddToCart = () => {
+    // ProductCard/useCart expects Product type including image, price, etc.
+    // Cast is safe due to identical shape
+    // @ts-ignore
     addToCart(product, quantity);
   };
 
@@ -246,7 +295,7 @@ const ProductDetail = () => {
             <h2 className="text-2xl font-bold mb-8">Related Products</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map(product => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product as any} />
               ))}
             </div>
           </div>

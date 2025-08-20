@@ -1,25 +1,71 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Filter, Grid, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import ProductCard from '@/components/ProductCard';
-import { products, categories, brands } from '@/data/products';
+
+interface ApiProduct {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  category: string;
+  brand: 'Parivartan' | 'Anandam' | 'Priest Booking' | string;
+  stock: number;
+  description?: string;
+}
+
+const ALL_CATEGORIES = [
+  'All Products',
+  'Idols & Statues',
+  'Pooja Items',
+  'Spiritual Jewelry',
+  'Lighting',
+  'Incense & Fragrance',
+  'Meditation',
+  'Clothing & Accessories',
+  'Sound Healing',
+  'Festival Kits',
+  'Ritual Kits',
+  'Wedding'
+];
+
+const ALL_BRANDS = ['All Brands', 'Parivartan', 'Anandam', 'Priest Booking'];
 
 const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState('All Products');
   const [selectedBrand, setSelectedBrand] = useState('All Brands');
   const [sortBy, setSortBy] = useState('name');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [items, setItems] = useState<ApiProduct[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredProducts = products
-    .filter(product => 
-      selectedCategory === 'All Products' || product.category === selectedCategory
-    )
-    .filter(product => 
-      selectedBrand === 'All Brands' || product.brand === selectedBrand
-    )
-    .sort((a, b) => {
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const params = new URLSearchParams();
+        if (selectedCategory !== 'All Products') params.set('category', selectedCategory);
+        if (selectedBrand !== 'All Brands') params.set('brand', selectedBrand);
+        const res = await fetch(`/api/products?${params.toString()}`);
+        if (!res.ok) throw new Error(`Failed to load products (${res.status})`);
+        const data = await res.json();
+        setItems(data.items || []);
+      } catch (e: any) {
+        setError(e.message || 'Failed to load products');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, [selectedCategory, selectedBrand]);
+
+  const filteredProducts = useMemo(() => {
+    const arr = [...items];
+    return arr.sort((a, b) => {
       switch (sortBy) {
         case 'price-low':
           return a.price - b.price;
@@ -31,6 +77,7 @@ const Products = () => {
           return 0;
       }
     });
+  }, [items, sortBy]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -57,7 +104,7 @@ const Products = () => {
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                {categories.map(category => (
+                {ALL_CATEGORIES.map(category => (
                   <SelectItem key={category} value={category}>
                     {category}
                   </SelectItem>
@@ -70,7 +117,7 @@ const Products = () => {
                 <SelectValue placeholder="Brand" />
               </SelectTrigger>
               <SelectContent>
-                {brands.map(brand => (
+                {ALL_BRANDS.map(brand => (
                   <SelectItem key={brand} value={brand}>
                     {brand}
                   </SelectItem>
@@ -119,11 +166,17 @@ const Products = () => {
 
         {/* Results Count */}
         <div className="mb-6">
-          <p className="text-muted-foreground">
-            Showing {filteredProducts.length} products
-            {selectedCategory !== 'All Products' && ` in ${selectedCategory}`}
-            {selectedBrand !== 'All Brands' && ` from ${selectedBrand}`}
-          </p>
+          {loading ? (
+            <p className="text-muted-foreground">Loading products...</p>
+          ) : error ? (
+            <p className="text-destructive">{error}</p>
+          ) : (
+            <p className="text-muted-foreground">
+              Showing {filteredProducts.length} products
+              {selectedCategory !== 'All Products' && ` in ${selectedCategory}`}
+              {selectedBrand !== 'All Brands' && ` from ${selectedBrand}`}
+            </p>
+          )}
         </div>
 
         {/* Products Grid */}
@@ -133,11 +186,11 @@ const Products = () => {
             : "space-y-4"
         }>
           {filteredProducts.map(product => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product as any} />
           ))}
         </div>
 
-        {filteredProducts.length === 0 && (
+        {!loading && !error && filteredProducts.length === 0 && (
           <div className="text-center py-16">
             <p className="text-muted-foreground text-lg">
               No products found matching your criteria.

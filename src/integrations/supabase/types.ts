@@ -49,6 +49,38 @@ export type Database = {
           },
         ]
       }
+      order_items: {
+        Row: {
+          id: number
+          order_id: string
+          price_at_purchase: number | null
+          product_id: string | null
+          quantity: number | null
+        }
+        Insert: {
+          id?: number
+          order_id: string
+          price_at_purchase?: number | null
+          product_id?: string | null
+          quantity?: number | null
+        }
+        Update: {
+          id?: number
+          order_id?: string
+          price_at_purchase?: number | null
+          product_id?: string | null
+          quantity?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           created_at: string
@@ -59,7 +91,7 @@ export type Database = {
           payment_method: string
           phone: string
           shipping_address: string
-          status: string
+          status: Database["public"]["Enums"]["order_status"]
           total: number
           updated_at: string
           user_id: string
@@ -73,7 +105,7 @@ export type Database = {
           payment_method?: string
           phone: string
           shipping_address: string
-          status?: string
+          status?: Database["public"]["Enums"]["order_status"]
           total: number
           updated_at?: string
           user_id: string
@@ -87,10 +119,43 @@ export type Database = {
           payment_method?: string
           phone?: string
           shipping_address?: string
-          status?: string
+          status?: Database["public"]["Enums"]["order_status"]
           total?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      otp_codes: {
+        Row: {
+          code: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          type: string
+          used: boolean
+          used_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          type: string
+          used?: boolean
+          used_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          type?: string
+          used?: boolean
+          used_at?: string | null
         }
         Relationships: []
       }
@@ -108,7 +173,7 @@ export type Database = {
           pandit_id: string
           service_type: string
           special_requirements: string | null
-          status: string
+          status: Database["public"]["Enums"]["panditbooking_status"]
           total_amount: number
           updated_at: string
           user_id: string
@@ -126,7 +191,7 @@ export type Database = {
           pandit_id: string
           service_type: string
           special_requirements?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["panditbooking_status"]
           total_amount: number
           updated_at?: string
           user_id: string
@@ -144,7 +209,7 @@ export type Database = {
           pandit_id?: string
           service_type?: string
           special_requirements?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["panditbooking_status"]
           total_amount?: number
           updated_at?: string
           user_id?: string
@@ -177,7 +242,7 @@ export type Database = {
           specialization: string
           updated_at: string
           user_id: string | null
-          verification_status: string
+          verification_status: Database["public"]["Enums"]["verification_status"]
           verified_at: string | null
           verified_by: string | null
         }
@@ -198,7 +263,7 @@ export type Database = {
           specialization: string
           updated_at?: string
           user_id?: string | null
-          verification_status?: string
+          verification_status?: Database["public"]["Enums"]["verification_status"]
           verified_at?: string | null
           verified_by?: string | null
         }
@@ -219,7 +284,7 @@ export type Database = {
           specialization?: string
           updated_at?: string
           user_id?: string | null
-          verification_status?: string
+          verification_status?: Database["public"]["Enums"]["verification_status"]
           verified_at?: string | null
           verified_by?: string | null
         }
@@ -341,16 +406,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_otps: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       has_role: {
         Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
+          p_role_name: Database["public"]["Enums"]["app_role"]
+          p_uid: string
         }
         Returns: boolean
       }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      order_status:
+        | "pending"
+        | "paid"
+        | "shipped"
+        | "delivered"
+        | "processing"
+        | "cancelled"
+      panditbooking_status: "pending" | "processing" | "booked" | "cancelled"
+      verification_status: "pending" | "verified" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -479,6 +557,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      order_status: [
+        "pending",
+        "paid",
+        "shipped",
+        "delivered",
+        "processing",
+        "cancelled",
+      ],
+      panditbooking_status: ["pending", "processing", "booked", "cancelled"],
+      verification_status: ["pending", "verified", "rejected"],
     },
   },
 } as const

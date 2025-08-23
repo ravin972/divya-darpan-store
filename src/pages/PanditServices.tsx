@@ -48,7 +48,7 @@ export default function PanditServices() {
       const { data, error } = await supabase
         .from('pandits')
         .select('*')
-        .eq('verification_status', 'approved')
+        .eq('verification_status', 'verified')
         .order('created_at', { ascending: false });
 
       if (error) throw error;

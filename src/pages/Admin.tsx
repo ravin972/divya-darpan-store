@@ -215,7 +215,7 @@ export default function Admin() {
     try {
       const { error } = await supabase
         .from('orders')
-        .update({ status: newStatus })
+        .update({ status: newStatus as 'pending' | 'paid' | 'shipped' | 'delivered' | 'processing' | 'cancelled' })
         .eq('id', orderId);
 
       if (error) throw error;
@@ -235,7 +235,7 @@ export default function Admin() {
     }
   };
 
-  const updatePanditStatus = async (panditId: string, status: 'approved' | 'rejected') => {
+  const updatePanditStatus = async (panditId: string, status: 'verified' | 'rejected') => {
     try {
       const { error } = await supabase
         .from('pandits')
@@ -543,7 +543,7 @@ export default function Admin() {
                             <div className="flex gap-2">
                               <Button
                                 size="sm"
-                                onClick={() => updatePanditStatus(pandit.id, 'approved')}
+                                onClick={() => updatePanditStatus(pandit.id, 'verified')}
                                 className="bg-green-600 hover:bg-green-700"
                               >
                                 Approve

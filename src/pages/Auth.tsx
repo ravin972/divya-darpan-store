@@ -19,9 +19,13 @@ export default function Auth() {
     lastName: ''
   });
   const [activeTab, setActiveTab] = useState('login');
+  const [authMethod, setAuthMethod] = useState<'password' | 'otp'>('password');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpEmail, setOtpEmail] = useState('');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, signIn, signUp, signInWithGoogle } = useAuth();
+  const { user, signIn, signUp, signInWithGoogle, sendOTP, verifyOTP } = useAuth();
 
   useEffect(() => {
     if (user) {
@@ -107,6 +111,99 @@ export default function Auth() {
     setIsLoading(false);
   };
 
+  const handleSendOTP = async () => {
+    if (!formData.email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    const { error } = await sendOTP(formData.email, activeTab === 'signup' ? 'signup' : 'signin');
+    
+    if (error) {
+      toast({
+        title: "Failed to Send OTP",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      setOtpSent(true);
+      setOtpEmail(formData.email);
+      toast({
+        title: "OTP Sent",
+        description: "Please check your email for the verification code"
+      });
+    }
+    setIsLoading(false);
+  };
+
+  const handleVerifyOTP = async () => {
+    if (!otpCode || otpCode.length !== 6) {
+      toast({
+        title: "Invalid OTP",
+        description: "Please enter a valid 6-digit OTP",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    const { error } = await verifyOTP(otpEmail, otpCode, activeTab === 'signup' ? 'signup' : 'signin');
+    
+    if (error) {
+      toast({
+        title: "OTP Verification Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      if (activeTab === 'signup') {
+        // For signup, we still need to create the account after OTP verification
+        const { error: signupError } = await signUp(
+          otpEmail,
+          formData.password,
+          {
+            first_name: formData.firstName,
+            last_name: formData.lastName
+          }
+        );
+        
+        if (signupError) {
+          toast({
+            title: "Signup Failed",
+            description: signupError.message,
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Account Created Successfully",
+            description: "Welcome! Your account has been created."
+          });
+          navigate('/');
+        }
+      } else {
+        // For signin with OTP, user is already authenticated
+        toast({
+          title: "Login Successful",
+          description: "Welcome back!"
+        });
+        navigate('/');
+      }
+    }
+    setIsLoading(false);
+  };
+
+  const resetOTPFlow = () => {
+    setOtpSent(false);
+    setOtpCode('');
+    setOtpEmail('');
+    setAuthMethod('password');
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-sunset p-4">
       <Card className="w-full max-w-md card-divine">
@@ -125,96 +222,261 @@ export default function Auth() {
             </TabsList>
             
             <TabsContent value="login" className="space-y-4 mt-4">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                  />
+              {!otpSent ? (
+                <>
+                  <div className="flex gap-2 mb-4">
+                    <Button
+                      type="button"
+                      variant={authMethod === 'password' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setAuthMethod('password')}
+                      className="flex-1"
+                    >
+                      Password
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={authMethod === 'otp' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setAuthMethod('otp')}
+                      className="flex-1"
+                    >
+                      OTP
+                    </Button>
+                  </div>
+
+                  {authMethod === 'password' ? (
+                    <form onSubmit={handleLogin} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          name="email"
+                          type="email"
+                          placeholder="Enter your email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
+                        <Input
+                          id="password"
+                          name="password"
+                          type="password"
+                          placeholder="Enter your password"
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          required
+                        />
+                      </div>
+                      
+                      <Button type="submit" className="w-full btn-divine" disabled={isLoading}>
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Sign In with Password
+                      </Button>
+                    </form>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="otp-email">Email</Label>
+                        <Input
+                          id="otp-email"
+                          name="email"
+                          type="email"
+                          placeholder="Enter your email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          required
+                        />
+                      </div>
+                      
+                      <Button 
+                        type="button" 
+                        onClick={handleSendOTP} 
+                        className="w-full btn-divine" 
+                        disabled={isLoading}
+                      >
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Send OTP
+                      </Button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <div className="text-center space-y-2">
+                    <h3 className="font-medium">Enter Verification Code</h3>
+                    <p className="text-sm text-muted-foreground">
+                      We've sent a 6-digit code to {otpEmail}
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="otp">Verification Code</Label>
+                    <Input
+                      id="otp"
+                      type="text"
+                      placeholder="Enter 6-digit OTP"
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      maxLength={6}
+                      className="text-center text-lg tracking-widest"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={resetOTPFlow}
+                      className="flex-1"
+                    >
+                      Back
+                    </Button>
+                    <Button 
+                      type="button" 
+                      onClick={handleVerifyOTP} 
+                      className="flex-1 btn-divine" 
+                      disabled={isLoading}
+                    >
+                      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Verify
+                    </Button>
+                  </div>
+
+                  <Button 
+                    type="button" 
+                    variant="ghost"
+                    onClick={handleSendOTP}
+                    className="w-full text-sm"
+                    disabled={isLoading}
+                  >
+                    Resend OTP
+                  </Button>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                
-                <Button type="submit" className="w-full btn-divine" disabled={isLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Sign In
-                </Button>
-              </form>
+              )}
             </TabsContent>
             
             <TabsContent value="signup" className="space-y-4 mt-4">
-              <form onSubmit={handleSignup} className="space-y-4">
-                <div className="grid grid-cols-2 gap-2">
+              {!otpSent ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input
+                        id="firstName"
+                        name="firstName"
+                        placeholder="First name"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input
+                        id="lastName"
+                        name="lastName"
+                        placeholder="Last name"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
+                    <Label htmlFor="signup-email">Email</Label>
                     <Input
-                      id="firstName"
-                      name="firstName"
-                      placeholder="First name"
-                      value={formData.firstName}
+                      id="signup-email"
+                      name="email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={formData.email}
                       onChange={handleInputChange}
+                      required
                     />
                   </div>
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
+                    <Label htmlFor="signup-password">Password</Label>
                     <Input
-                      id="lastName"
-                      name="lastName"
-                      placeholder="Last name"
-                      value={formData.lastName}
+                      id="signup-password"
+                      name="password"
+                      type="password"
+                      placeholder="Create a password"
+                      value={formData.password}
                       onChange={handleInputChange}
+                      required
                     />
                   </div>
+                  
+                  <Button 
+                    type="button" 
+                    onClick={handleSendOTP} 
+                    className="w-full btn-divine" 
+                    disabled={isLoading}
+                  >
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Send Verification Code
+                  </Button>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                  />
+              ) : (
+                <div className="space-y-4">
+                  <div className="text-center space-y-2">
+                    <h3 className="font-medium">Verify Your Email</h3>
+                    <p className="text-sm text-muted-foreground">
+                      We've sent a 6-digit code to {otpEmail}
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-otp">Verification Code</Label>
+                    <Input
+                      id="signup-otp"
+                      type="text"
+                      placeholder="Enter 6-digit OTP"
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      maxLength={6}
+                      className="text-center text-lg tracking-widest"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={resetOTPFlow}
+                      className="flex-1"
+                    >
+                      Back
+                    </Button>
+                    <Button 
+                      type="button" 
+                      onClick={handleVerifyOTP} 
+                      className="flex-1 btn-divine" 
+                      disabled={isLoading}
+                    >
+                      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Create Account
+                    </Button>
+                  </div>
+
+                  <Button 
+                    type="button" 
+                    variant="ghost"
+                    onClick={handleSendOTP}
+                    className="w-full text-sm"
+                    disabled={isLoading}
+                  >
+                    Resend OTP
+                  </Button>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    placeholder="Create a password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                
-                <Button type="submit" className="w-full btn-divine" disabled={isLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Create Account
-                </Button>
-              </form>
+              )}
             </TabsContent>
           </Tabs>
           

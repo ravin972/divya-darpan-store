@@ -10,6 +10,9 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
+  sendOTP: (email: string, type: 'signup' | 'signin') => Promise<{ error: any }>;
+  verifyOTP: (email: string, code: string, type: 'signup' | 'signin') => Promise<{ error: any }>;
+  signInWithOTP: (email: string) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -76,6 +79,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error };
   };
 
+  const sendOTP = async (email: string, type: 'signup' | 'signin') => {
+    try {
+      const { data, error } = await supabase.functions.invoke('send-otp', {
+        body: { email, type }
+      });
+      
+      if (error) throw error;
+      return { error: null };
+    } catch (error: any) {
+      return { error };
+    }
+  };
+
+  const verifyOTP = async (email: string, code: string, type: 'signup' | 'signin') => {
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-otp', {
+        body: { email, code, type }
+      });
+      
+      if (error) throw error;
+      return { error: null };
+    } catch (error: any) {
+      return { error };
+    }
+  };
+
+  const signInWithOTP = async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth?verified=true`
+      }
+    });
+    return { error };
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -84,7 +123,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       signUp,
       signIn,
       signOut,
-      signInWithGoogle
+      signInWithGoogle,
+      sendOTP,
+      verifyOTP,
+      signInWithOTP
     }}>
       {children}
     </AuthContext.Provider>

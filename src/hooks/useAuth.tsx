@@ -26,6 +26,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state change:', event, session);
+        if (event === 'SIGNED_IN') {
+          console.log('User signed in successfully:', session?.user);
+        }
+        if (event === 'TOKEN_REFRESHED') {
+          console.log('Token refreshed:', session?.user);
+        }
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -34,6 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -70,12 +78,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signInWithGoogle = async () => {
+    console.log('Starting Google sign in...');
+    const redirectUrl = `${window.location.origin}/`;
+    console.log('Using redirect URL:', redirectUrl);
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/`
+        redirectTo: redirectUrl
       }
     });
+    
+    if (error) {
+      console.error('Google sign in error:', error);
+    }
     return { error };
   };
 

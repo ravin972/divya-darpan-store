@@ -483,8 +483,7 @@ export default function Auth() {
           <div className="mt-6">
             <Separator className="my-4" />
             <Button 
-              variant="outline" 
-              className="w-full" 
+              className="w-full btn-divine" 
               onClick={handleGoogleLogin}
               disabled={isLoading}
             >

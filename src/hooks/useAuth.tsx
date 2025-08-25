@@ -115,6 +115,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       
       if (error) throw error;
+      
+      // After OTP verification, sign in the user using magic link OTP method
+      if (type === 'signin') {
+        const { error: signInError } = await supabase.auth.signInWithOtp({
+          email,
+          options: {
+            shouldCreateUser: false
+          }
+        });
+        if (signInError) throw signInError;
+      }
+      
       return { error: null };
     } catch (error: any) {
       return { error };

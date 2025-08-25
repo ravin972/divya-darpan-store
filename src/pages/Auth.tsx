@@ -186,12 +186,12 @@ export default function Auth() {
           navigate('/');
         }
       } else {
-        // For signin with OTP, user is already authenticated
+        // For signin with OTP, we need to wait for auth state to update
         toast({
           title: "Login Successful",
           description: "Welcome back!"
         });
-        navigate('/');
+        // Navigation will happen automatically via useEffect when user state updates
       }
     }
     setIsLoading(false);
